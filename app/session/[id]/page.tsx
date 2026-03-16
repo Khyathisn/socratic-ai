@@ -415,15 +415,15 @@ export default function SessionPage() {
             <div key={i} style={{display:'flex',justifyContent:msg.role==='user'?'flex-end':'flex-start'}}>
               <div style={{
                 maxWidth:'80%',
-                background:msg.role==='user'?'rgba(255,255,255,0.08)':'transparent',
-                border:msg.role==='user'?'1px solid rgba(255,255,255,0.1)':'none',
-                borderRadius:'12px',
-                padding:msg.role==='user'?'12px 16px':'4px 0',
+                borderLeft: msg.role==='assistant' ? '2px solid rgba(255,255,255,0.15)' : 'none',
+                background:msg.role==='user'?'rgba(255,255,255,0.06)':'rgba(255,255,255,0.03)',
+                borderRadius:'8px',
+                padding:'16px',
               }}>
                 {msg.role==='assistant' && (
-                  <div style={{fontSize:'10px',color:modeColor,fontWeight:600,letterSpacing:'1px',marginBottom:'8px'}}>{MODE_LABELS[session?.mode]?.toUpperCase()}</div>
+                  <div style={{fontSize:'10px',color:'#71717a',fontWeight:600,letterSpacing:'1px',marginBottom:'8px'}}>{MODE_LABELS[session?.mode]?.toUpperCase()}</div>
                 )}
-                <div style={{fontSize:'14px',lineHeight:1.7,color:msg.role==='user'?'#ccc':'#e5e5e5',whiteSpace:'pre-wrap'}}>
+                <div style={{fontSize:'14px',lineHeight:1.7,color:msg.role==='user'?'#e5e5e5':'#d4d4d8',whiteSpace:'pre-wrap'}}>
                   {renderContent(msg.content)}
                 </div>
               </div>

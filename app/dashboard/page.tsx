@@ -124,15 +124,17 @@ export default function DashboardPage() {
           <p style={{fontSize:'13px',color:'#555',marginBottom:'24px'}}>Choose your learning mode</p>
           <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'12px'}}>
             {[
-              {mode:'ask',title:'Ask & Learn',desc:'Ask any DSA question naturally',icon:'💬'},
-              {mode:'review',title:'Code Review',desc:'Paste code, find the bug yourself',icon:'🔍'},
-              {mode:'learn',title:'Learn a Topic',desc:'Pick a topic, get a curriculum',icon:'📚'},
-              {mode:'interview',title:'Interview Sim',desc:'Mock interviews with Amazon, Google, Meta and more',icon:'🎤'},
+              {mode:'ask',title:'Ask & Learn',desc:'Ask any DSA question naturally',icon:'<svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'},
+              {mode:'review',title:'Code Review',desc:'Paste code, find the bug yourself',icon:'<svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'},
+              {mode:'learn',title:'Learn a Topic',desc:'Pick a topic, get a curriculum',icon:'<svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'},
+              {mode:'interview',title:'Interview Sim',desc:'Mock interviews with Amazon, Google, Meta and more',icon:'<svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v4"/><path d="M8 23h8"/></svg>'},
             ].map((m) => (
-              <button key={m.mode} onClick={() => m.mode === 'interview' ? router.push('/interview') : startSession(m.mode)} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'12px',padding:'24px 20px',textAlign:'left',cursor:'pointer',transition:'border-color 0.2s',color:'#fff',fontFamily:'Inter,sans-serif'}}>
-                <div style={{fontSize:'20px',marginBottom:'12px'}}>{m.icon}</div>
-                <div style={{fontSize:'14px',fontWeight:500,color:'#e5e5e5',marginBottom:'6px'}}>{m.title}</div>
-                <div style={{fontSize:'12px',color:'#555',lineHeight:1.5}}>{m.desc}</div>
+              <button key={m.mode} onClick={() => m.mode === 'interview' ? router.push('/interview') : startSession(m.mode)} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'12px',padding:'24px 20px',textAlign:'left',cursor:'pointer',transition:'border-color 0.2s',color:'#fff',fontFamily:'Inter,sans-serif',height:'180px',display:'flex',flexDirection:'column',justifyContent:'space-between'}} onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}>
+                <div>
+                  <div style={{fontSize:'20px',marginBottom:'12px',color:'rgba(255,255,255,0.7)'}} dangerouslySetInnerHTML={{__html: m.icon}} />
+                  <div style={{fontSize:'14px',fontWeight:500,color:'#e5e5e5',marginBottom:'6px'}}>{m.title}</div>
+                  <div style={{fontSize:'12px',color:'#555',lineHeight:1.5}}>{m.desc}</div>
+                </div>
               </button>
             ))}
           </div>

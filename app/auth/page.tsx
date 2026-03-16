@@ -56,8 +56,15 @@ function AuthForm() {
         <span style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '-0.4px' }}>SocraticAI</span>
       </div>
 
-      <div style={{ width: '100%', maxWidth: '400px', position: 'relative', zIndex: 5, padding: '0 24px' }}>
-        <div style={{ marginBottom: '32px' }}>
+      <div style={{ width: '100%', maxWidth: '420px', position: 'relative', zIndex: 5, padding: '0 24px' }}>
+        <div style={{
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '16px',
+          padding: '40px',
+          margin: 'auto'
+        }}>
+          <div style={{ marginBottom: '32px' }}>
           <h1 style={{ fontSize: '26px', fontWeight: 800, letterSpacing: '-1px', marginBottom: '8px' }}>
             {isLogin ? 'Welcome back' : 'Create account'}
           </h1>
@@ -117,6 +124,7 @@ function AuthForm() {
             {isLogin ? 'Sign up' : 'Sign in'}
           </span>
         </p>
+        </div>
       </div>
     </div>
   )

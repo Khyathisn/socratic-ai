@@ -153,9 +153,21 @@ export default function VisualizePage() {
             padding: '120px 20px',
             color: 'rgba(255,255,255,0.4)'
           }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
-            <div style={{ fontSize: '18px' }}>
-              Select an algorithm above to visualize
+            <div style={{ width: '80px', height: '80px', margin: '0 auto 24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="80" height="80" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.5">
+                <rect x="16" y="8" width="48" height="32" rx="2"/>
+                <path d="m16 16 48 0"/>
+                <path d="m24 24 0 8"/>
+                <path d="m32 24 0 12"/>
+                <path d="m40 24 0 6"/>
+                <path d="m48 24 0 10"/>
+              </svg>
+            </div>
+            <div style={{ fontSize: '18px', marginBottom: '8px', color: 'rgba(255,255,255,0.8)' }}>
+              Select an algorithm to begin visualization
+            </div>
+            <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>
+              Watch algorithms come alive step by step
             </div>
           </div>
         )}

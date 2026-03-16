@@ -230,13 +230,15 @@ onChange={(value) => setEditorCode(value || "")}
 
         {error && <p style={{ color: '#ef4444', fontSize: '13px', marginBottom: '16px' }}>{error}</p>}
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          style={{ width: '100%', background: '#fff', color: '#000', border: 'none', padding: '14px', borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'Inter,sans-serif', opacity: loading ? 0.5 : 1 }}
-        >
-          {loading ? 'Starting session...' : 'Start Session →'}
-        </button>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            style={{ width: 'auto', background: '#fff', color: '#000', border: 'none', padding: '12px 48px', borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'Inter,sans-serif', opacity: loading ? 0.5 : 1 }}
+          >
+            {loading ? 'Starting session...' : 'Start Session →'}
+          </button>
+        </div>
       </main>
     </div>
   )
