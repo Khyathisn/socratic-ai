@@ -28,11 +28,11 @@ function InfinityLogo({ size = 'hero' }: { size?: 'hero' | 'nav' }) {
   const fullWord = 'SocraticAI'
 
   useEffect(() => {
-    const arc = arcRef.current
-    const textEl = textRef.current
-    const cursor = cursorRef.current
-    const d1 = dot1Ref.current
-    const d2 = dot2Ref.current
+    const arc = arcRef.current!
+    const textEl = textRef.current!
+    const cursor = cursorRef.current!
+    const d1 = dot1Ref.current!
+    const d2 = dot2Ref.current!
     if (!arc || !textEl || !cursor || !d1 || !d2) return
 
     let t1: any, t2: any, t3: any, iv: any, t4: any, t5: any
