@@ -1,6 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 
 function InfinityLogo({ size = 'hero' }: { size?: 'hero' | 'nav' }) {
   const arcRef = useRef<SVGPathElement>(null)
@@ -149,6 +150,13 @@ function InfinityLogo({ size = 'hero' }: { size?: 'hero' | 'nav' }) {
 
 export default function LandingPage() {
   const router = useRouter()
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setIsLoggedIn(true)
+    })
+  }, [])
 
   return (
     <div style={{ position:"relative", background:'#000000', minHeight:'100vh', color:'#fff', fontFamily:'Inter,sans-serif' }}>
@@ -219,7 +227,7 @@ export default function LandingPage() {
         <InfinityLogo size="nav"/>
 
         <div style={{display:'flex',gap:'8px'}}>
-          <button onClick={()=>router.push('/auth')}
+          <button onClick={() => router.push(isLoggedIn ? '/dashboard' : '/auth')}
             style={{
               background:'transparent',
               border:'1px solid rgba(255,255,255,0.12)',
@@ -233,7 +241,7 @@ export default function LandingPage() {
             Sign in
           </button>
 
-          <button onClick={()=>router.push('/auth')}
+          <button onClick={() => router.push(isLoggedIn ? '/dashboard' : '/auth')}
             style={{
               background:'#fff',
               color:'#000',
@@ -261,7 +269,7 @@ export default function LandingPage() {
         <InfinityLogo size="hero"/>
 
         <div style={{display:'flex',gap:'12px',marginTop:'32px'}}>
-          <button onClick={()=>router.push('/auth')}
+          <button onClick={() => router.push(isLoggedIn ? '/dashboard' : '/auth')}
             style={{
               background:'#fff',
               color:'#000',
@@ -298,11 +306,11 @@ export default function LandingPage() {
           marginTop:'48px'
         }}>
 
-          <Card title="Ask" desc="Ask questions" mode="ask" router={router}/>
-          <Card title="Debug" desc="Fix your code" mode="review" router={router}/>
-          <Card title="Learn" desc="Master DSA" mode="learn" router={router}/>
-          <Card title="Visualize" desc="See algorithms" mode="visualize" router={router}/>
-          <Card title="Code Viz" desc="Paste & visualize" mode="code-visualize" router={router}/>
+          <Card title="Ask" desc="Ask questions" mode="ask" router={router} isLoggedIn={isLoggedIn}/>
+          <Card title="Debug" desc="Fix your code" mode="review" router={router} isLoggedIn={isLoggedIn}/>
+          <Card title="Learn" desc="Master DSA" mode="learn" router={router} isLoggedIn={isLoggedIn}/>
+          <Card title="Visualize" desc="See algorithms" mode="visualize" router={router} isLoggedIn={isLoggedIn}/>
+          <Card title="Code Viz" desc="Paste & visualize" mode="code-visualize" router={router} isLoggedIn={isLoggedIn}/>
 
         </div>
       </div>
@@ -325,7 +333,7 @@ export default function LandingPage() {
   )
 }
 
-function Card({title,desc,mode,router}:any){
+function Card({title,desc,mode,router,isLoggedIn}:any){
 
   const icons:any = {
     ask: (
@@ -369,13 +377,13 @@ function Card({title,desc,mode,router}:any){
   return(
     <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
       <button
-        onClick={()=>{
+        onClick={() => {
           if(mode === 'visualize'){
             router.push('/visualize')
           } else if(mode === 'code-visualize'){
             router.push('/code-visualize')
           } else {
-            router.push(`/auth?redirect=/session/new?mode=${mode}`)
+            router.push(isLoggedIn ? `/session/new?mode=${mode}` : `/auth?redirect=${encodeURIComponent(`/session/new?mode=${mode}`)}`)
           }
         }}
         style={{
