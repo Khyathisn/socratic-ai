@@ -38,9 +38,11 @@ export default function CertificatePage() {
         body: JSON.stringify({
           problemTitle: session.problem_title || session.topic,
           mode: session.mode,
-          messages: messages.map(m => ({ role: m.role, content: m.content })),
-          questionCount: messages.filter((m: any) => m.role === 'assistant').length,
+          messages: messages.map((m: any) => ({ role: m.role, content: m.content })),
+          questionCount: Math.min(messages.filter((m: any) => m.role === 'assistant').length, 5),
           language: session.language,
+          difficulty: session.difficulty,
+          sessionId: session.id,
         }),
       })
       const data = await res.json()

@@ -1,7 +1,6 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef } from 'react'
-import ConstellationBackground from "@/components/ConstellationBackground"
 
 function InfinityLogo({ size = 'hero' }: { size?: 'hero' | 'nav' }) {
   const arcRef = useRef<SVGPathElement>(null)
@@ -152,10 +151,52 @@ export default function LandingPage() {
   const router = useRouter()
 
   return (
-    <div style={{ position:"relative", background:'#080808', minHeight:'100vh', color:'#fff', fontFamily:'Inter,sans-serif' }}>
-      <ConstellationBackground />
+    <div style={{ position:"relative", background:'#000000', minHeight:'100vh', color:'#fff', fontFamily:'Inter,sans-serif' }}>
+      {/* Aurora Blobs */}
+      <div style={{
+        position:"fixed",
+        top:"-20%",
+        left:"-10%",
+        width:"600px",
+        height:"600px",
+        background:"radial-gradient(circle, rgba(120,80,255,0.12) 0%, transparent 70%)",
+        filter:"blur(80px)",
+        animation:"drift1 8s ease-in-out infinite alternate",
+        zIndex:0
+      }}/>
+      <div style={{
+        position:"fixed",
+        top:"-10%",
+        right:"-10%",
+        width:"500px",
+        height:"500px",
+        background:"radial-gradient(circle, rgba(0,200,150,0.08) 0%, transparent 70%)",
+        filter:"blur(80px)",
+        animation:"drift2 10s ease-in-out infinite alternate",
+        zIndex:0
+      }}/>
+      <div style={{
+        position:"fixed",
+        bottom:"-20%",
+        left:"30%",
+        width:"700px",
+        height:"400px",
+        background:"radial-gradient(circle, rgba(80,120,255,0.08) 0%, transparent 70%)",
+        filter:"blur(100px)",
+        animation:"drift3 12s ease-in-out infinite alternate",
+        zIndex:0
+      }}/>
+      
+      {/* Noise Texture Overlay */}
+      <div style={{
+        position:"fixed",
+        inset:0,
+        opacity:0.03,
+        backgroundImage:"url('data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' /%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E')",
+        zIndex:0
+      }}/>
 
-      <div style={{ position:"relative", zIndex: 10 }}>
+      <div style={{ position:"relative", zIndex: 1 }}>
 
       {/* GRID BACKGROUND */}
       <div style={{
@@ -248,34 +289,6 @@ export default function LandingPage() {
           >
             Dashboard →
           </button>
-
-          <button onClick={()=>router.push('/demo')}
-            style={{
-              background:'transparent',
-              border:'1px solid rgba(239,68,68,0.3)',
-              color:'#ef4444',
-              padding:'11px 28px',
-              borderRadius:'8px',
-              fontSize:'14px',
-              cursor:'pointer'
-            }}
-          >
-            ⚡ Live Demo
-          </button>
-
-          <button 
-            onClick={() => router.push('/code-visualize-ai')}
-            style={{
-              border:'1px solid rgba(255,255,255,0.2)',
-              background:'transparent',
-              color:'white',
-              padding:'12px 28px',
-              borderRadius:'10px',
-              cursor:'pointer'
-            }}
-          >
-            AI Visualizer
-          </button>
         </div>
 
         {/* ICON CARDS */}
@@ -294,6 +307,20 @@ export default function LandingPage() {
         </div>
       </div>
     </div>
+    <style jsx>{`
+      @keyframes drift1 {
+        from { transform: translate(0px, 0px) }
+        to { transform: translate(40px, 30px) }
+      }
+      @keyframes drift2 {
+        from { transform: translate(0px, 0px) }
+        to { transform: translate(-30px, 40px) }
+      }
+      @keyframes drift3 {
+        from { transform: translate(0px, 0px) }
+        to { transform: translate(20px, -30px) }
+      }
+    `}</style>
   </div>
   )
 }

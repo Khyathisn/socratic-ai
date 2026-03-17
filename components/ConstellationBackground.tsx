@@ -20,7 +20,7 @@ export default function ConstellationBackground(){
 
         THREE: THREE,
 
-        color: 0xffffff,
+        color: 0x7fffffff,
 
         backgroundColor: 0x080808,
 
@@ -28,7 +28,9 @@ export default function ConstellationBackground(){
 
         maxDistance: 22,
 
-        spacing: 18
+        spacing: 18,
+
+        speed: 0.7
 
       })
 
@@ -51,8 +53,8 @@ export default function ConstellationBackground(){
         width:"100%",
         height:"100%",
         zIndex:0,
-        opacity: 0.04,
-        filter: "blur(0.5px)"
+        opacity: 0.01,
+        filter: "blur(1px)"
       }}
     />
 

@@ -19,15 +19,15 @@ const MODE_COLORS: Record<string, string> = {
 }
 
 export default function SessionPage() {
+  const [user, setUser] = useState<any>(null)
   const [session, setSession] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [questionCount, setQuestionCount] = useState(0)
   const [initializing, setInitializing] = useState(true)
-  const [timeLeft, setTimeLeft] = useState(45 * 60) // 45 minutes
+  const [timeLeft, setTimeLeft] = useState(45 * 60)
   const [timerActive, setTimerActive] = useState(false)
-  const [timerStarted, setTimerStarted] = useState(false)
   const [runOutput, setRunOutput] = useState('')
   const [runError, setRunError] = useState(false)
   const [runLoading, setRunLoading] = useState(false)
@@ -38,20 +38,35 @@ export default function SessionPage() {
   const params = useParams()
   const sessionId = params.id as string
 
-  const {
-    transcript,
-    listening,
-    startListening,
-    stopListening,
-    speak
-  } = useVoiceInterview()
+  const { transcript, listening, startListening, stopListening, speak } = useVoiceInterview()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: auth } }) => {
       if (!auth) { router.push('/auth'); return }
+      setUser(auth.user)
       loadSession(sessionId)
     })
   }, [sessionId])
+
+  useEffect(() => {
+    const style = document.createElement('style')
+    style.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
+    `
+    document.head.appendChild(style)
+    return () => { document.head.removeChild(style) }
+  }, [])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -60,18 +75,13 @@ export default function SessionPage() {
   useEffect(() => {
     if (session?.mode !== 'interview') return
     setTimerActive(true)
-    setTimerStarted(true)
   }, [session])
 
   useEffect(() => {
     if (!timerActive || session?.mode !== 'interview') return
     const interval = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 0) {
-          clearInterval(interval)
-          setTimerActive(false)
-          return 0
-        }
+        if (prev <= 0) { clearInterval(interval); setTimerActive(false); return 0 }
         return prev - 1
       })
     }, 1000)
@@ -79,9 +89,7 @@ export default function SessionPage() {
   }, [timerActive, session])
 
   useEffect(() => {
-    if (transcript) {
-      setInput(transcript)
-    }
+    if (transcript) setInput(transcript)
   }, [transcript])
 
   useEffect(() => {
@@ -94,7 +102,7 @@ export default function SessionPage() {
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)
     const s = seconds % 60
-    return `${m}:${s.toString().padStart(2, '0')}` 
+    return `${m}:${s.toString().padStart(2, '0')}`
   }
 
   const loadSession = async (id: string) => {
@@ -165,7 +173,8 @@ export default function SessionPage() {
     } catch (e) { console.error(e) }
     finally { setLoading(false) }
   }
-    const sendMessage = async () => {
+
+  const sendMessage = async () => {
     if (!input.trim() || loading) return
     const userMsg = { role: 'user', content: input }
     const updated = [...messages, userMsg]
@@ -195,12 +204,8 @@ export default function SessionPage() {
       setMessages(prev => [...prev, aiMsg])
       setQuestionCount(prev => prev + 1)
       await supabase.from('messages').insert({ session_id: sessionId, role: 'assistant', content: data.message })
-      // Remove hard limit - session continues until student solves it
-      
-      // Check if AI indicates session is complete [SOLVED]
       if (data.message.includes('[SOLVED]')) {
         await supabase.from('sessions').update({ status: 'completed' }).eq('id', sessionId)
-        // Award XP based on questions used (fewer = better understanding)
         const xpEarned = Math.max(100 - (questionCount * 10), 50)
         const { data: prog } = await supabase.from('progress').select('*').eq('user_id', session.user_id).single()
         const today = new Date().toISOString().split('T')[0]
@@ -214,22 +219,15 @@ export default function SessionPage() {
           if (newStreak >= 3 && !newBadges.includes('streak_3')) newBadges.push('streak_3')
           if ((prog.problems_solved || 0) + 1 >= 5 && !newBadges.includes('problems_5')) newBadges.push('problems_5')
           await supabase.from('progress').update({
-            xp: newXP,
-            streak: newStreak,
-            last_session_date: today,
+            xp: newXP, streak: newStreak, last_session_date: today,
             problems_solved: (prog.problems_solved || 0) + 1,
             total_sessions: (prog.total_sessions || 0) + 1,
             badges: newBadges,
           }).eq('user_id', session.user_id)
         } else {
           await supabase.from('progress').insert({
-            user_id: session.user_id,
-            xp: xpEarned,
-            streak: 1,
-            last_session_date: today,
-            problems_solved: 1,
-            total_sessions: 1,
-            badges: [],
+            user_id: session.user_id, xp: xpEarned, streak: 1,
+            last_session_date: today, problems_solved: 1, total_sessions: 1, badges: [],
           })
         }
       }
@@ -239,9 +237,37 @@ export default function SessionPage() {
 
   const renderContent = (content: string) => content.split('```').map((part, i) =>
     i % 2 === 1
-      ? <pre key={i} style={{background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'8px',padding:'12px 16px',margin:'8px 0',overflowX:'auto',fontSize:'12px',color:'#e5e5e5',fontFamily:'monospace',lineHeight:1.6}}>{part.replace(/^[a-z]+\n/,'')}</pre>
+      ? <div key={i} style={{position:'relative',margin:'8px 0'}}>
+          <div style={{fontSize:'10px',color:'#555',letterSpacing:'1px',textTransform:'uppercase',marginBottom:'4px'}}>code</div>
+          <pre style={{background:'#000000',border:'1px solid #2c2c2e',borderRadius:'10px',padding:'12px 16px',margin:'0',overflowX:'auto',fontSize:'13px',color:'#fff',fontFamily:"'SF Mono', monospace",lineHeight:1.6}}>{part.replace(/^[a-z]+\n/,'')}</pre>
+        </div>
       : <span key={i}>{part}</span>
   )
+
+  const executeCode = async () => {
+    if (!session?.original_code) return
+    setRunLoading(true)
+    setRunOutput('Running...')
+    try {
+      const logs: string[] = []
+      const originalLog = console.log
+      console.log = (...args: any[]) => { logs.push(args.join(' ')); originalLog(...args) }
+      try {
+        eval(session.original_code)
+      } catch (error: any) {
+        setRunOutput(error.toString())
+        setRunError(true)
+        console.log = originalLog
+        return
+      }
+      console.log = originalLog
+      if (logs.length > 0) { setRunOutput(logs.join('\n')); setRunError(false) }
+      else { setRunOutput('Program executed successfully with no output.'); setRunError(false) }
+    } catch (e: any) {
+      setRunOutput('Execution failed')
+      setRunError(true)
+    } finally { setRunLoading(false) }
+  }
 
   if (initializing) return (
     <div style={{minHeight:'100vh',background:'#000',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif'}}>
@@ -253,319 +279,183 @@ export default function SessionPage() {
   )
 
   const modeColor = MODE_COLORS[session?.mode] || '#fff'
-
-  const executeCode = async () => {
-    if (!session?.original_code) return
-    setRunLoading(true)
-    setRunOutput("Running...")
-    try {
-      const logs: string[] = []
-
-      const originalLog = console.log
-
-      console.log = (...args: any[]) => {
-        logs.push(args.join(" "))
-        originalLog(...args)
-      }
-
-      try {
-        eval(session.original_code)
-      } catch (error: any) {
-        setRunOutput(error.toString())
-        setRunError(true)
-        console.log = originalLog
-        return
-      }
-
-      console.log = originalLog
-
-      if (logs.length > 0) {
-        setRunOutput(logs.join("\n"))
-        setRunError(false)
-      } else {
-        setRunOutput("Program executed successfully with no output.")
-        setRunError(false)
-      }
-
-    } catch (e: any) {
-      setRunOutput("Execution failed")
-      setRunError(true)
-    } finally {
-      setRunLoading(false)
-    }
-  }
+  const userExchanges = messages.filter(m => m.role === 'user').length
+  const showGiveUp = userExchanges >= 3
 
   return (
     <div style={{minHeight:'100vh',background:'#000',fontFamily:'Inter,sans-serif',color:'#fff',display:'flex',flexDirection:'column'}}>
+
       {/* Nav */}
       <nav style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 32px',borderBottom:'1px solid rgba(255,255,255,0.07)',background:'rgba(0,0,0,0.9)',backdropFilter:'blur(24px)',position:'fixed',top:0,left:0,right:0,zIndex:10}}>
-  
-  {/* Left — back + logo */}
-  <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
-    <button
-      onClick={() => router.push('/dashboard')}
-      style={{background:'transparent',border:'1px solid rgba(255,255,255,0.08)',color:'#555',padding:'6px 14px',borderRadius:'7px',fontSize:'12px',cursor:'pointer',fontFamily:'Inter,sans-serif',display:'flex',alignItems:'center',gap:'6px'}}>
-      ← Back
-    </button>
-    <div style={{display:'flex',alignItems:'center',gap:'8px',cursor:'pointer'}} onClick={() => router.push('/')}>
-      <svg width="28" height="28" viewBox="0 0 44 44">
-        <defs>
-          <linearGradient id="nlg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#fff" stopOpacity="1"/>
-            <stop offset="100%" stopColor="#fff" stopOpacity="0.2"/>
-          </linearGradient>
-        </defs>
-        <path d="M 35 11 A 17 17 0 1 0 35 33" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="8" strokeLinecap="round"/>
-        <path d="M 35 11 A 17 17 0 1 0 35 33" fill="none" stroke="url(#nlg)" strokeWidth="3" strokeLinecap="round"/>
-        <circle cx="35" cy="11" r="2" fill="#fff" opacity="0.5"/>
-        <circle cx="35" cy="33" r="2" fill="#fff" opacity="0.5"/>
-      </svg>
-      <span style={{fontSize:'14px',fontWeight:700,letterSpacing:'-0.4px'}}>SocraticAI</span>
-    </div>
-  </div>
+        <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
+          <button onClick={() => router.push('/dashboard')} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.08)',color:'#555',padding:'6px 14px',borderRadius:'7px',fontSize:'12px',cursor:'pointer',fontFamily:'Inter,sans-serif'}}>
+            ← Back
+          </button>
+          <div style={{display:'flex',alignItems:'center',gap:'8px',cursor:'pointer'}} onClick={() => router.push('/')}>
+            <svg width="28" height="28" viewBox="0 0 44 44">
+              <defs>
+                <linearGradient id="nlg2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#fff" stopOpacity="1"/>
+                  <stop offset="100%" stopColor="#fff" stopOpacity="0.2"/>
+                </linearGradient>
+              </defs>
+              <path d="M 35 11 A 17 17 0 1 0 35 33" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="8" strokeLinecap="round"/>
+              <path d="M 35 11 A 17 17 0 1 0 35 33" fill="none" stroke="url(#nlg2)" strokeWidth="3" strokeLinecap="round"/>
+              <circle cx="35" cy="11" r="2" fill="#fff" opacity="0.5"/>
+              <circle cx="35" cy="33" r="2" fill="#fff" opacity="0.5"/>
+            </svg>
+            <span style={{fontSize:'14px',fontWeight:700,letterSpacing:'-0.4px'}}>SocraticAI</span>
+          </div>
+        </div>
 
-  {/* Center — session title + mode */}
-  <div style={{textAlign:'center'}}>
-    <div style={{fontSize:'13px',color:'#e5e5e5',fontWeight:500}}>{session?.problem_title || session?.topic}</div>
-    <div style={{fontSize:'11px',color:'#444',marginTop:'2px',display:'flex',alignItems:'center',gap:'8px',justifyContent:'center'}}>
-      <span>Exchange {Math.min(questionCount,10)} · {MODE_LABELS[session?.mode]}</span>
-      {session?.mode === 'interview' && (
-        <span style={{
-          color: timeLeft < 300 ? '#ef4444' : timeLeft < 600 ? '#f59e0b' : '#34d399',
-          fontWeight: 600,
-          fontSize: '12px',
-          background: timeLeft < 300 ? 'rgba(239,68,68,0.1)' : 'rgba(52,211,153,0.1)',
-          padding: '2px 8px',
-          borderRadius: '100px',
-          border: `1px solid ${timeLeft < 300 ? 'rgba(239,68,68,0.2)' : 'rgba(52,211,153,0.2)'}`,
-        }}>
-          ⏱ {formatTime(timeLeft)}
-        </span>
-      )}
-    </div>
-  </div>
+        <div style={{textAlign:'center'}}>
+          <div style={{fontSize:'13px',color:'#e5e5e5',fontWeight:500}}>{session?.problem_title || session?.topic}</div>
+          <div style={{fontSize:'11px',color:'#444',marginTop:'2px',display:'flex',alignItems:'center',gap:'8px',justifyContent:'center'}}>
+            <span>Exchange {Math.min(questionCount,10)} · {MODE_LABELS[session?.mode]}</span>
+            {session?.mode === 'interview' && (
+              <span style={{color:timeLeft<300?'#ef4444':timeLeft<600?'#f59e0b':'#34d399',fontWeight:600,fontSize:'12px',background:timeLeft<300?'rgba(239,68,68,0.1)':'rgba(52,211,153,0.1)',padding:'2px 8px',borderRadius:'100px',border:`1px solid ${timeLeft<300?'rgba(239,68,68,0.2)':'rgba(52,211,153,0.2)'}`}}>
+                ⏱ {formatTime(timeLeft)}
+              </span>
+            )}
+          </div>
+        </div>
 
-  {/* Right — progress dots + change mode */}
-  <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
-    <div style={{display:'flex',gap:'6px'}}>
-      {[1,2,3,4,5].map(n => (
-        <div key={n} style={{width:'6px',height:'6px',borderRadius:'50%',background:n<=questionCount?modeColor:questionCount>=5?'rgba(255,255,255,0.3)':'rgba(255,255,255,0.1)', boxShadow:questionCount>=5 && n<=5?'0 0 8px rgba(255,255,255,0.2)':'none', transition:'all 0.3s'}}/>
-      ))}
-      {questionCount > 5 && (
-        <div style={{width:'6px',height:'6px',borderRadius:'50%',background:'rgba(255,255,255,0.3)', animation:'pulse 2s infinite'}}/>
-      )}
-    </div>
-    {session?.mode === 'review' && (
-      <button
-        onClick={() => setShowRunner(!showRunner)}
-        style={{background:'rgba(52,211,153,0.08)',border:'1px solid rgba(52,211,153,0.15)',color:'#34d399',padding:'5px 12px',borderRadius:'6px',fontSize:'11px',fontWeight:600,cursor:'pointer',fontFamily:'Inter,sans-serif'}}
-      >
-        ▶ Run Code
-      </button>
-    )}
-    <button
-      onClick={() => router.push('/dashboard')}
-      style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',color:'#888',padding:'6px 14px',borderRadius:'7px',fontSize:'12px',cursor:'pointer',fontFamily:'Inter,sans-serif',whiteSpace:'nowrap' as const}}>
-      Change mode
-    </button>
-  </div>
-</nav>
-
-{showRunner && session?.mode === 'review' && (
-  <div style={{background:'rgba(0,0,0,0.6)',backdropFilter:'blur(20px)',borderBottom:'1px solid rgba(255,255,255,0.07)',padding:'16px 32px',marginTop:'60px'}}>
-    <div style={{maxWidth:'720px',margin:'0 auto'}}>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}}>
-        <span style={{fontSize:'11px',color:'#444',letterSpacing:'1px',textTransform:'uppercase' as const}}>Code Execution — {session.language}</span>
-        <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
-          {runTime !== null && (
-            <span style={{fontSize:'11px',color:'#555'}}>⏱ {runTime}ms</span>
+        <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
+          <div style={{display:'flex',gap:'6px'}}>
+            {[1,2,3,4,5].map(n => (
+              <div key={n} style={{width:'6px',height:'6px',borderRadius:'50%',background:n<=questionCount?modeColor:'rgba(255,255,255,0.1)',transition:'all 0.3s'}}/>
+            ))}
+            {questionCount > 5 && (
+              <div style={{width:'6px',height:'6px',borderRadius:'50%',background:'rgba(255,255,255,0.3)',animation:'pulse 2s infinite'}}/>
+            )}
+          </div>
+          {session?.mode === 'review' && (
+            <button onClick={() => setShowRunner(!showRunner)} style={{background:'rgba(52,211,153,0.08)',border:'1px solid rgba(52,211,153,0.15)',color:'#34d399',padding:'5px 12px',borderRadius:'6px',fontSize:'11px',fontWeight:600,cursor:'pointer',fontFamily:'Inter,sans-serif'}}>
+              ▶ Run Code
+            </button>
           )}
-          <button
-            onClick={executeCode}
-            disabled={runLoading}
-            style={{background:'rgba(52,211,153,0.1)',border:'1px solid rgba(52,211,153,0.2)',color:'#34d399',padding:'6px 16px',borderRadius:'7px',fontSize:'12px',fontWeight:600,cursor:'pointer',fontFamily:'Inter,sans-serif'}}
-          >
-            {runLoading ? '⏳ Running...' : '▶ Run'}
+          <button onClick={() => router.push('/dashboard')} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',color:'#888',padding:'6px 14px',borderRadius:'7px',fontSize:'12px',cursor:'pointer',fontFamily:'Inter,sans-serif',whiteSpace:'nowrap' as const}}>
+            Change mode
           </button>
         </div>
-      </div>
-      <pre style={{
-        background:'rgba(0,0,0,0.5)',
-        border:`1px solid ${runError?'rgba(239,68,68,0.2)':'rgba(255,255,255,0.06)'}`,
-        borderRadius:'8px',
-        padding:'12px 14px',
-        fontSize:'12px',
-        color:runError?'#f87171':'#34d399',
-        minHeight:'60px',
-        fontFamily:'monospace',
-        lineHeight:1.6,
-        whiteSpace:'pre-wrap' as const,
-        margin:0
-      }}>
-        {runOutput || '// Output will appear here'}
-      </pre>
-    </div>
-  </div>
-)}
+      </nav>
+
+      {/* Code Runner */}
+      {showRunner && session?.mode === 'review' && (
+        <div style={{background:'rgba(0,0,0,0.6)',backdropFilter:'blur(20px)',borderBottom:'1px solid rgba(255,255,255,0.07)',padding:'16px 32px',marginTop:'60px'}}>
+          <div style={{maxWidth:'720px',margin:'0 auto'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}}>
+              <span style={{fontSize:'11px',color:'#444',letterSpacing:'1px',textTransform:'uppercase' as const}}>Code Execution</span>
+              <button onClick={executeCode} disabled={runLoading} style={{background:'rgba(52,211,153,0.1)',border:'1px solid rgba(52,211,153,0.2)',color:'#34d399',padding:'6px 16px',borderRadius:'7px',fontSize:'12px',fontWeight:600,cursor:'pointer',fontFamily:'Inter,sans-serif'}}>
+                {runLoading ? '⏳ Running...' : '▶ Run'}
+              </button>
+            </div>
+            <pre style={{background:'rgba(0,0,0,0.5)',border:`1px solid ${runError?'rgba(239,68,68,0.2)':'rgba(255,255,255,0.06)'}`,borderRadius:'8px',padding:'12px 14px',fontSize:'12px',color:runError?'#f87171':'#34d399',minHeight:'60px',fontFamily:'monospace',lineHeight:1.6,whiteSpace:'pre-wrap' as const,margin:0}}>
+              {runOutput || '// Output will appear here'}
+            </pre>
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
-      <div style={{flex:1,overflowY:'auto',padding:'80px 0 120px',maxWidth:'720px',margin:'0 auto',width:'100%'}}>
+      <div style={{flex:1,overflowY:'auto',padding:'80px 0 160px',maxWidth:'720px',margin:'0 auto',width:'100%'}}>
         <div style={{padding:'0 24px',display:'flex',flexDirection:'column',gap:'16px'}}>
           {messages.map((msg, i) => (
-            <div key={i} style={{display:'flex',justifyContent:msg.role==='user'?'flex-end':'flex-start'}}>
-              <div style={{
-                maxWidth:'80%',
-                borderLeft: msg.role==='assistant' ? '2px solid rgba(255,255,255,0.15)' : 'none',
-                background:msg.role==='user'?'rgba(255,255,255,0.06)':'rgba(255,255,255,0.03)',
-                borderRadius:'8px',
-                padding:'16px',
-              }}>
-                {msg.role==='assistant' && (
-                  <div style={{fontSize:'10px',color:'#71717a',fontWeight:600,letterSpacing:'1px',marginBottom:'8px'}}>{MODE_LABELS[session?.mode]?.toUpperCase()}</div>
-                )}
-                <div style={{fontSize:'14px',lineHeight:1.7,color:msg.role==='user'?'#e5e5e5':'#d4d4d8',whiteSpace:'pre-wrap'}}>
+            <div key={i} style={{display:'flex',justifyContent:msg.role==='user'?'flex-end':'flex-start',alignItems:'flex-end',gap:'8px',animation:`fadeIn 0.3s ease-out both`}}>
+              {msg.role === 'assistant' && (
+                <div style={{width:'32px',height:'32px',borderRadius:'50%',background:'#1c1c1e',border:'1px solid #2c2c2e',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <span style={{fontSize:'12px',fontWeight:700,color:'#fff'}}>S</span>
+                </div>
+              )}
+              <div style={{maxWidth:'75%',background:msg.role==='user'?'#0a84ff':'#1c1c1e',borderRadius:msg.role==='user'?'18px 18px 4px 18px':'18px 18px 18px 4px',padding:'12px 16px',fontSize:'15px',lineHeight:1.6,color:'#fff'}}>
+                <div style={{fontSize:'14px',lineHeight:1.6,whiteSpace:'pre-wrap' as const}}>
                   {renderContent(msg.content)}
                 </div>
+                <div style={{fontSize:'11px',color:'rgba(255,255,255,0.3)',marginTop:'4px'}}>
+                  Exchange {Math.floor(i/2)+1}
+                </div>
               </div>
+              {msg.role === 'user' && (
+                <div style={{width:'32px',height:'32px',borderRadius:'50%',background:'#2c2c2e',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <span style={{fontSize:'14px',fontWeight:600,color:'#fff'}}>{user?.email?.[0]?.toUpperCase()||'U'}</span>
+                </div>
+              )}
             </div>
           ))}
           {loading && (
-            <div style={{display:'flex',gap:'6px',padding:'4px 0'}}>
-              {[0,150,300].map((d,i) => (
-                <div key={i} style={{width:'6px',height:'6px',borderRadius:'50%',background:'#333',animation:`bounce 1.2s ${d}ms infinite`}}/>
-              ))}
+            <div style={{display:'flex',alignItems:'flex-end',gap:'8px'}}>
+              <div style={{width:'32px',height:'32px',borderRadius:'50%',background:'#1c1c1e',border:'1px solid #2c2c2e',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <span style={{fontSize:'12px',fontWeight:700,color:'#fff'}}>S</span>
+              </div>
+              <div style={{background:'#1c1c1e',borderRadius:'18px 18px 18px 4px',padding:'14px 18px',display:'flex',gap:'5px',alignItems:'center'}}>
+                {[0,150,300].map((d,i) => (
+                  <div key={i} style={{width:'6px',height:'6px',borderRadius:'50%',background:'#555',animation:`bounce 1.2s ${d}ms infinite`}}/>
+                ))}
+              </div>
             </div>
           )}
           <div ref={messagesEndRef}/>
         </div>
       </div>
 
-      {/* Input */}
-      <div style={{position:'fixed',bottom:0,left:0,right:0,background:'rgba(0,0,0,0.95)',backdropFilter:'blur(24px)',borderTop:'1px solid rgba(255,255,255,0.07)',padding:'16px 24px'}}>
+      {/* Input Area */}
+      <div style={{position:'fixed',bottom:0,left:0,right:0,background:'rgba(0,0,0,0.95)',backdropFilter:'blur(24px)',borderTop:'1px solid rgba(255,255,255,0.07)',padding:'12px 24px 16px'}}>
         <div style={{maxWidth:'720px',margin:'0 auto',display:'flex',flexDirection:'column',gap:'8px'}}>
-          <div style={{display:'flex',gap:'10px',alignItems:'flex-end'}}>
+          
+          {/* Main input row */}
+          <div style={{display:'flex',gap:'8px',alignItems:'flex-end'}}>
             <textarea
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()} }}
               placeholder="Type your answer... (Enter to send)"
               rows={2}
-              style={{flex:1,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'10px',padding:'12px 16px',color:'#fff',fontSize:'14px',resize:'none',fontFamily:'Inter,sans-serif',outline:'none',lineHeight:1.6}}
+              style={{flex:1,background:'#1c1c1e',border:'1px solid #2c2c2e',borderRadius:'16px',padding:'12px 16px',color:'#fff',fontSize:'14px',resize:'none' as const,fontFamily:'Inter,sans-serif',outline:'none',lineHeight:1.6,minHeight:'52px'}}
               disabled={loading}
             />
             {session?.mode === 'interview' && (
               <>
-                <button
-                  onClick={listening ? stopListening : startListening}
-                  disabled={loading}
-                  style={{
-                    background: listening ? '#ef4444' : '#22c55e',
-                    border: 'none',
-                    padding: '12px 16px',
-                    borderRadius: '10px',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontFamily: 'Inter,sans-serif',
-                    opacity: loading ? 0.3 : 1,
-                    whiteSpace: 'nowrap',
-                    color: '#fff'
-                  }}
-                >
-                  🎤 {listening ? 'Listening...' : 'Voice Answer'}
+                <button onClick={listening ? stopListening : startListening} disabled={loading} style={{background:listening?'#ef4444':'#22c55e',border:'none',padding:'12px 14px',borderRadius:'10px',fontSize:'13px',cursor:'pointer',fontFamily:'Inter,sans-serif',color:'#fff',whiteSpace:'nowrap' as const}}>
+                  🎤 {listening ? 'Stop' : 'Voice'}
                 </button>
-                <button
-                  onClick={() => window.speechSynthesis.cancel()}
-                  style={{
-                    background: '#ef4444',
-                    border: 'none',
-                    padding: '12px 16px',
-                    borderRadius: '10px',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    fontFamily: 'Inter,sans-serif',
-                    whiteSpace: 'nowrap',
-                    color: '#fff'
-                  }}
-                >
-                  Stop Voice
+                <button onClick={() => window.speechSynthesis.cancel()} style={{background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.2)',padding:'12px 14px',borderRadius:'10px',fontSize:'13px',cursor:'pointer',fontFamily:'Inter,sans-serif',color:'#ef4444',whiteSpace:'nowrap' as const}}>
+                  Stop AI
                 </button>
               </>
             )}
-            <button
-              onClick={sendMessage}
-              disabled={loading||!input.trim()}
-              style={{background:'#fff',color:'#000',border:'none',padding:'12px 20px',borderRadius:'10px',fontSize:'13px',fontWeight:500,cursor:'pointer',fontFamily:'Inter,sans-serif',opacity:loading||!input.trim()?0.3:1,whiteSpace:'nowrap'}}
-            >
+            <button onClick={sendMessage} disabled={loading||!input.trim()} style={{background:'#fff',color:'#000',border:'none',padding:'12px 20px',borderRadius:'10px',fontSize:'13px',fontWeight:600,cursor:loading||!input.trim()?'not-allowed':'pointer',fontFamily:'Inter,sans-serif',opacity:loading||!input.trim()?0.3:1,whiteSpace:'nowrap' as const}}>
               Send →
             </button>
           </div>
-          {listening && (
-            <div style={{color: '#22c55e', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px'}}>
-              <span style={{width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', animation: 'pulse 1s infinite'}}></span>
-              Listening... Speak your answer
-            </div>
-          )}
-          <button
-            onClick={handleTeachMe}
-            disabled={loading}
-            style={{alignSelf:'flex-start',background:'transparent',border:'1px solid rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.4)',padding:'8px 16px',borderRadius:'8px',fontSize:'12px',cursor:'pointer',fontFamily:'Inter,sans-serif',transition:'all 0.2s'}}
-            onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.15)'; e.currentTarget.style.color='rgba(255,255,255,0.6)' }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.08)'; e.currentTarget.style.color='rgba(255,255,255,0.4)' }}
-          >
-            I give up — teach me
-          </button>
+
           {questionCount > 5 && (
-            <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'12px',padding:'8px 24px 12px'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'12px',padding:'8px 24px 12px',flexWrap:'wrap' as const}}>
               {session?.mode === 'interview' ? (
-                <button
-                  onClick={() => router.push(`/interview-report/${sessionId}`)}
-                  style={{background:'#fff',color:'#000',border:'none',padding:'10px 24px',borderRadius:'8px',fontSize:'13px',fontWeight:700,cursor:'pointer',fontFamily:'Inter,sans-serif'}}
-                >
+                <button onClick={() => router.push(`/interview-report/${sessionId}`)} style={{background:'#fff',color:'#000',border:'none',padding:'10px 24px',borderRadius:'8px',fontSize:'13px',fontWeight:700,cursor:'pointer',fontFamily:'Inter,sans-serif'}}>
                   🎤 Get Interview Report Card
                 </button>
-              ) : session?.mode === 'review' ? (
-                <div style={{display:'flex',gap:'12px'}}>
-                  <button
-                    onClick={() => router.push(`/complexity/${sessionId}`)}
-                    style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',color:'#fff',padding:'10px 20px',borderRadius:'8px',fontSize:'13px',fontWeight:600,cursor:'pointer',fontFamily:'Inter,sans-serif'}}
-                  >
-                    📊 Analyze Complexity
-                  </button>
-                  <button
-                    onClick={() => router.push(`/certificate/${sessionId}`)}
-                    style={{background:'#fff',color:'#000',border:'none',padding:'10px 24px',borderRadius:'8px',fontSize:'13px',fontWeight:700,cursor:'pointer',fontFamily:'Inter,sans-serif'}}
-                  >
-                    🏆 Get Certificate
-                  </button>
-                </div>
               ) : (
-                <button
-                  onClick={() => router.push(`/certificate/${sessionId}`)}
-                  style={{background:'#fff',color:'#000',border:'none',padding:'10px 24px',borderRadius:'8px',fontSize:'13px',fontWeight:700,cursor:'pointer',fontFamily:'Inter,sans-serif'}}
-                >
+                <button onClick={() => router.push(`/certificate/${sessionId}`)} style={{background:'#fff',color:'#000',border:'none',padding:'10px 24px',borderRadius:'8px',fontSize:'13px',fontWeight:700,cursor:'pointer',fontFamily:'Inter,sans-serif'}}>
                   🏆 Get Certificate
                 </button>
               )}
-              <button
-                onClick={() => router.push(`/variants/${sessionId}`)}
-                style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',color:'#888',padding:'10px 20px',borderRadius:'8px',fontSize:'13px',cursor:'pointer',fontFamily:'Inter,sans-serif'}}
-              >
+              {session?.mode === 'review' && (
+                <button onClick={() => router.push(`/complexity/${sessionId}`)} style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',color:'#fff',padding:'10px 20px',borderRadius:'8px',fontSize:'13px',fontWeight:600,cursor:'pointer',fontFamily:'Inter,sans-serif'}}>
+                  📊 Analyze Complexity
+                </button>
+              )}
+              <button onClick={() => router.push(`/variants/${sessionId}`)} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',color:'#888',padding:'10px 20px',borderRadius:'8px',fontSize:'13px',cursor:'pointer',fontFamily:'Inter,sans-serif'}}>
                 🧩 Similar Problems
               </button>
-              <button
-                onClick={() => router.push('/dashboard')}
-                style={{background:'transparent',border:'1px solid rgba(255,255,255,0.1)',color:'#666',padding:'10px 20px',borderRadius:'8px',fontSize:'13px',cursor:'pointer',fontFamily:'Inter,sans-serif'}}
-              >
+              <button onClick={() => router.push('/dashboard')} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.1)',color:'#666',padding:'10px 20px',borderRadius:'8px',fontSize:'13px',cursor:'pointer',fontFamily:'Inter,sans-serif'}}>
                 Back to Dashboard
               </button>
             </div>
           )}
+
         </div>
       </div>
 
-      <style>{`@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}`}</style>
     </div>
   )
 }

@@ -20,14 +20,23 @@ QUESTIONS USED: ${questionCount} of 5
 CONVERSATION:
 ${conversation}
 
+SCORING RULES:
+- Student used ${questionCount} questions out of 5
+- Fewer questions = better understanding = higher score
+- If questionCount <= 2: score should be 90-100, grade A or A+
+- If questionCount <= 3: score should be 75-89, grade B+ or A-  
+- If questionCount <= 4: score should be 60-74, grade B or B-
+- If questionCount === 5: score should be 50-59, grade C+ or C
+- Calculate score and grade based on this
+
 Generate a JSON certificate with exactly this structure (no markdown, pure JSON):
 {
   "conceptsmastered": ["concept1", "concept2", "concept3"],
   "reasoningpath": ["step1 of their thinking", "step2", "step3"],
   "strengths": ["strength1", "strength2"],
   "improvement": "one specific area to improve",
-  "score": 85,
-  "grade": "B+",
+  "score": [dynamic score based on questionCount],
+  "grade": [dynamic grade based on questionCount],
   "summary": "2 sentence summary of what of student demonstrated"
 }`
 

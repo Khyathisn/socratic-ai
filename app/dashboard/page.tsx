@@ -71,7 +71,9 @@ export default function DashboardPage() {
       <div style={{position:'fixed',inset:0,backgroundImage:'linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px)',backgroundSize:'64px 64px',pointerEvents:'none'}}/>
       
       <nav style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'18px 40px',borderBottom:'1px solid rgba(255,255,255,0.07)',position:'fixed',top:0,left:0,right:0,zIndex:10,background:'rgba(0,0,0,0.8)',backdropFilter:'blur(24px)',width:'100%'}}>
-        <div style={{display:'flex',alignItems:'center',gap:'10px',cursor:'pointer'}} onClick={() => router.push('/')}>
+        <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
+          <span onClick={() => router.push('/')} style={{fontSize:'13px',color:'rgba(255,255,255,0.4)',cursor:'pointer',padding:'4px 8px',borderRadius:'4px',transition:'color 0.2s'}} onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>← Home</span>
+          <div style={{display:'flex',alignItems:'center',gap:'10px',cursor:'pointer'}} onClick={() => router.push('/')}>
           <svg width="36" height="36" viewBox="0 0 44 44">
             <defs>
               <linearGradient id="dlg" x1="0" y1="0" x2="0" y2="1">
@@ -85,6 +87,7 @@ export default function DashboardPage() {
             <circle cx="35" cy="33" r="2" fill="#fff" opacity="0.5"/>
           </svg>
           <span style={{fontSize:'15px',fontWeight:700,letterSpacing:'-0.4px'}}>SocraticAI</span>
+          </div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
           <div style={{display:'flex',alignItems:'center',gap:'16px',marginRight:'16px'}}>
@@ -105,7 +108,7 @@ export default function DashboardPage() {
         {/* Mode selector */}
         <div style={{marginBottom:'48px'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'24px'}}>
-            <h2 style={{fontSize:'22px',fontWeight:600,letterSpacing:'-0.5px',marginBottom:'8px'}}>Start a session</h2>
+            <h2 style={{fontSize:'28px',fontWeight:800,letterSpacing:'-0.5px',marginBottom:'8px'}}>Start a session</h2>
             <div style={{display:'flex',gap:'12px'}}>
               <button
                 onClick={() => router.push('/problems')}
@@ -117,7 +120,7 @@ export default function DashboardPage() {
                 onClick={() => router.push('/demo')}
                 style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', padding: '11px 20px', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontFamily: 'Inter,sans-serif', fontWeight: 600 }}
               >
-                ⚡ TLE Demo
+                TLE Demo
               </button>
             </div>
           </div>
@@ -129,10 +132,10 @@ export default function DashboardPage() {
               {mode:'learn',title:'Learn a Topic',desc:'Pick a topic, get a curriculum',icon:'<svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'},
               {mode:'interview',title:'Interview Sim',desc:'Mock interviews with Amazon, Google, Meta and more',icon:'<svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v4"/><path d="M8 23h8"/></svg>'},
             ].map((m) => (
-              <button key={m.mode} onClick={() => m.mode === 'interview' ? router.push('/interview') : startSession(m.mode)} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'12px',padding:'24px 20px',textAlign:'left',cursor:'pointer',transition:'border-color 0.2s',color:'#fff',fontFamily:'Inter,sans-serif',height:'180px',display:'flex',flexDirection:'column',justifyContent:'space-between'}} onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}>
+              <button key={m.mode} onClick={() => m.mode === 'interview' ? router.push('/interview') : startSession(m.mode)} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'12px',padding:'24px 20px',textAlign:'left',cursor:'pointer',transition:'all 0.2s',color:'#fff',fontFamily:'Inter,sans-serif',height:'180px',display:'flex',flexDirection:'column',justifyContent:'space-between'}} onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}>
                 <div>
                   <div style={{fontSize:'20px',marginBottom:'12px',color:'rgba(255,255,255,0.7)'}} dangerouslySetInnerHTML={{__html: m.icon}} />
-                  <div style={{fontSize:'14px',fontWeight:500,color:'#e5e5e5',marginBottom:'6px'}}>{m.title}</div>
+                  <div style={{fontSize:'18px',fontWeight:700,color:'#e5e5e5',marginBottom:'6px'}}>{m.title}</div>
                   <div style={{fontSize:'12px',color:'#555',lineHeight:1.5}}>{m.desc}</div>
                 </div>
               </button>
@@ -142,7 +145,7 @@ export default function DashboardPage() {
 
         {/* Session history */}
         <div>
-          <h2 style={{fontSize:'16px',fontWeight:500,color:'#666',marginBottom:'16px',letterSpacing:'-0.2px'}}>Recent sessions</h2>
+          <h2 style={{fontSize:'18px',fontWeight:600,color:'rgba(255,255,255,0.6)',marginBottom:'16px',letterSpacing:'-0.2px'}}>Recent sessions</h2>
           {sessions.length === 0 ? (
             <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:'12px',padding:'48px',textAlign:'center'}}>
               <p style={{color:'#333',fontSize:'14px'}}>No sessions yet — start one above</p>
