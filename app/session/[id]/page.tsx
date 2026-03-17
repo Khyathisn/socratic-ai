@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
+import { useVoiceInterview } from '@/components/useVoiceInterview'
 
 const MODE_LABELS: Record<string, string> = {
   ask: 'Ask & Learn',
@@ -37,6 +38,7 @@ export default function SessionPage() {
   const router = useRouter()
   const params = useParams()
   const sessionId = params.id as string
+  const { transcript, listening, startListening, stopListening, speak, supported } = useVoiceInterview()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: auth } }) => {
@@ -76,6 +78,17 @@ export default function SessionPage() {
     }, 1000)
     return () => clearInterval(interval)
   }, [timerActive, session])
+
+  useEffect(() => {
+    if (transcript) setInput(transcript)
+  }, [transcript])
+
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1]
+    if (lastMessage?.role === 'assistant' && session?.mode === 'interview') {
+      speak(lastMessage.content)
+    }
+  }, [messages])
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)
@@ -536,6 +549,44 @@ export default function SessionPage() {
                 style={{ flex: 1, background: '#1c1c1e', border: '1px solid #2c2c2e', borderRadius: '16px', padding: '12px 16px', color: '#fff', fontSize: '14px', resize: 'none' as const, fontFamily: 'Inter,sans-serif', outline: 'none', lineHeight: 1.6, minHeight: '52px' }}
                 disabled={loading}
               />
+              {session?.mode === 'interview' && supported && (
+                <>
+                  <button
+                    onClick={listening ? stopListening : startListening}
+                    disabled={loading}
+                    style={{
+                      background: listening ? '#ef4444' : 'rgba(34,197,94,0.15)',
+                      border: `1px solid ${listening ? '#ef4444' : 'rgba(34,197,94,0.3)'}`,
+                      color: listening ? '#fff' : '#22c55e',
+                      padding: '12px 14px',
+                      borderRadius: '10px',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      fontFamily: 'Inter,sans-serif',
+                      whiteSpace: 'nowrap' as const,
+                      animation: listening ? 'pulse 1s infinite' : 'none',
+                    }}
+                  >
+                    {listening ? '🔴 Stop' : '🎤 Voice'}
+                  </button>
+                  <button
+                    onClick={() => window.speechSynthesis.cancel()}
+                    style={{
+                      background: 'rgba(239,68,68,0.08)',
+                      border: '1px solid rgba(239,68,68,0.15)',
+                      color: '#ef4444',
+                      padding: '12px 14px',
+                      borderRadius: '10px',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      fontFamily: 'Inter,sans-serif',
+                      whiteSpace: 'nowrap' as const,
+                    }}
+                  >
+                    🔇 Mute
+                  </button>
+                </>
+              )}
               <button onClick={sendMessage} disabled={loading || !input.trim()} style={{ background: '#fff', color: '#000', border: 'none', padding: '12px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', fontFamily: 'Inter,sans-serif', opacity: loading || !input.trim() ? 0.3 : 1, whiteSpace: 'nowrap' as const }}>
                 Send →
               </button>
