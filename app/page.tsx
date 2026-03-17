@@ -226,35 +226,30 @@ export default function LandingPage() {
       }}>
         <InfinityLogo size="nav"/>
 
-        <div style={{display:'flex',gap:'8px'}}>
-          <button onClick={() => router.push(isLoggedIn ? '/dashboard' : '/auth')}
-            style={{
-              background:'transparent',
-              border:'1px solid rgba(255,255,255,0.12)',
-              color:'rgba(255,255,255,0.8)',
-              padding:'8px 18px',
-              borderRadius:'8px',
-              fontSize:'13px',
-              cursor:'pointer'
-            }}
-          >
-            Sign in
-          </button>
-
-          <button onClick={() => router.push(isLoggedIn ? '/dashboard' : '/auth')}
-            style={{
-              background:'#fff',
-              color:'#000',
-              border:'none',
-              padding:'8px 18px',
-              borderRadius:'8px',
-              fontSize:'13px',
-              fontWeight:600,
-              cursor:'pointer'
-            }}
-          >
-            Get started
-          </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {isLoggedIn ? (
+            <button 
+              onClick={() => router.push('/dashboard')} 
+              style={{ background: '#fff', border: 'none', color: '#000', padding: '7px 18px', borderRadius: '7px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter,sans-serif' }}
+            >
+              Dashboard →
+            </button>
+          ) : (
+            <>
+              <button 
+                onClick={() => router.push('/auth')} 
+                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#888', padding: '7px 18px', borderRadius: '7px', fontSize: '13px', cursor: 'pointer', fontFamily: 'Inter,sans-serif' }}
+              >
+                Sign in
+              </button>
+              <button 
+                onClick={() => router.push('/auth')} 
+                style={{ background: '#fff', border: 'none', color: '#000', padding: '7px 18px', borderRadius: '7px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter,sans-serif' }}
+              >
+                Get started
+              </button>
+            </>
+          )}
         </div>
       </nav>
 
