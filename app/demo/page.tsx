@@ -14,7 +14,12 @@ function findDuplicate(nums) {
       }
     }
   }
-}`
+}
+
+// Test cases
+console.log(findDuplicate([1,3,4,2,2])); // Expected: 2
+console.log(findDuplicate([3,1,3,4,2])); // Expected: 3
+console.log("TLE on large inputs - try with 100000 elements!");`
 
 export default function DemoPage() {
   const [user, setUser] = useState<any>(null)
