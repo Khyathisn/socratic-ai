@@ -153,17 +153,32 @@ export default function DashboardPage() {
           ) : (
             <div style={{display:'flex',flexDirection:'column',gap:'1px',background:'rgba(255,255,255,0.06)',borderRadius:'12px',overflow:'hidden'}}>
               {sessions.map((s) => (
-                <div key={s.id} onClick={() => router.push(`/session/${s.id}`)} style={{background:'#000',padding:'16px 24px',display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer'}}>
-                  <div>
-                    <div style={{fontSize:'14px',color:'#e5e5e5',fontWeight:400,marginBottom:'4px'}}>{s.problem_title || s.topic || 'Session'}</div>
-                    <div style={{fontSize:'12px',color:'#444'}}>{new Date(s.created_at).toLocaleDateString()}</div>
-                  </div>
-                  <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-                    <span style={{fontSize:'11px',color:MODE_COLORS[s.mode] || '#555',border:`1px solid ${MODE_COLORS[s.mode] || '#333'}33`,padding:'3px 10px',borderRadius:'100px'}}>{MODE_LABELS[s.mode] || s.mode}</span>
-                    <span style={{fontSize:'11px',color:s.status==='completed'?'#10b981':'#666',border:`1px solid ${s.status==='completed'?'#10b98133':'#ffffff11'}`,padding:'3px 10px',borderRadius:'100px'}}>{s.status}</span>
-                  </div>
+              <div
+                key={s.id}
+                style={{ background: '#000', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+              >
+                <div onClick={() => router.push(`/session/${s.id}`)} style={{ flex: 1 }}>
+                  <div style={{ fontSize: '14px', color: '#e5e5e5', fontWeight: 400, marginBottom: '4px' }}>{s.problem_title || s.topic || 'Session'}</div>
+                  <div style={{ fontSize: '12px', color: '#444' }}>{new Date(s.created_at).toLocaleDateString()}</div>
                 </div>
-              ))}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '11px', color: MODE_COLORS[s.mode] || '#555', border: `1px solid ${MODE_COLORS[s.mode] || '#333'}33`, padding: '3px 10px', borderRadius: '100px' }}>{MODE_LABELS[s.mode] || s.mode}</span>
+                  <span style={{ fontSize: '11px', color: s.status === 'completed' ? '#10b981' : '#666', border: `1px solid ${s.status === 'completed' ? '#10b98133' : '#ffffff11'}`, padding: '3px 10px', borderRadius: '100px' }}>{s.status}</span>
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation()
+                      if (!confirm('Delete this session?')) return
+                      await supabase.from('messages').delete().eq('session_id', s.id)
+                      await supabase.from('sessions').delete().eq('id', s.id)
+                      setSessions(prev => prev.filter(x => x.id !== s.id))
+                    }}
+                    style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', fontFamily: 'Inter,sans-serif' }}
+                  >
+                    🗑
+                  </button>
+                </div>
+              </div>
+            ))}
             </div>
           )}
         </div>
