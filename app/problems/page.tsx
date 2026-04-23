@@ -57,7 +57,7 @@ export default function ProblemsPage() {
   })
 
   const startProblem = async (problem: typeof PROBLEMS[0]) => {
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { session } }: any = await supabase.auth.getSession()
     if (!session) {
       router.push(`/auth?redirect=/problems`)
       return

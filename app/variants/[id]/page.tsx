@@ -20,7 +20,7 @@ export default function VariantsPage() {
   const sessionId = params.id as string
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: auth } }) => {
+    supabase.auth.getSession().then(({ data: { session: auth } }: any) => {
       if (!auth) { router.push('/auth'); return }
       setUser(auth.user)
       loadSession()

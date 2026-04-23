@@ -27,7 +27,7 @@ export default function InterviewPage() {
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (!session) { router.push('/auth'); return }
       setUser(session.user)
     })

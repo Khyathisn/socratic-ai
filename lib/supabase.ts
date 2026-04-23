@@ -1,6 +1,14 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient as createBrowserClient } from '@/utils/supabase/client'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Singleton Supabase browser client — prevents multiple GoTrueClient warnings
+let client: ReturnType<typeof createBrowserClient> | null = null
 
-export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey)
+function getClient() {
+  if (!client) {
+    client = createBrowserClient()
+  }
+  return client
+}
+
+// Default export for backward compatibility across all pages
+export const supabase = getClient()

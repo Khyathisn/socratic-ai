@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (!session) { router.push('/auth'); return }
       setUser(session.user)
       loadSessions(session.user.id)

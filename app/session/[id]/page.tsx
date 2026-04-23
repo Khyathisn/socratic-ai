@@ -41,7 +41,7 @@ export default function SessionPage() {
   const { transcript, listening, startListening, stopListening, speak, supported } = useVoiceInterview()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: auth } }) => {
+    supabase.auth.getSession().then(({ data: { session: auth } }: any) => {
       if (!auth) { router.push('/auth'); return }
       setUser(auth.user)
       loadSession(sessionId)
@@ -103,8 +103,8 @@ export default function SessionPage() {
     if (data.status === 'completed' || data.status === 'learned') setSessionComplete(true)
     const { data: msgs } = await supabase.from('messages').select('*').eq('session_id', id).order('created_at', { ascending: true })
     if (msgs && msgs.length > 0) {
-      setMessages(msgs.map(m => ({ role: m.role, content: m.content })))
-      setQuestionCount(msgs.filter(m => m.role === 'assistant').length)
+      setMessages(msgs.map((m: any) => ({ role: m.role, content: m.content })))
+      setQuestionCount(msgs.filter((m: any) => m.role === 'assistant').length)
       setInitializing(false)
     } else {
       await startSession(data)
@@ -170,7 +170,7 @@ export default function SessionPage() {
   }
 
   const awardXP = async () => {
-    const { data: { session: authSession } } = await supabase.auth.getSession()
+    const { data: { session: authSession } }: any = await supabase.auth.getSession()
     if (!authSession?.user) return
     const userId = authSession.user.id
     const xpEarned = Math.max(100 - (questionCount * 10), 50)

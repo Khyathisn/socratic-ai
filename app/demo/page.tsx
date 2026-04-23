@@ -28,7 +28,7 @@ export default function DemoPage() {
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (!session) {
         router.push('/auth?redirect=/demo')
         return

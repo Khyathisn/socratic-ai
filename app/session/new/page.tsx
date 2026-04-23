@@ -32,7 +32,7 @@ console.log("Run Code Working")`
   const [timeMs, setTimeMs] = useState<number | null>(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (!session) router.push('/auth')
       else setUser(session.user)
     })

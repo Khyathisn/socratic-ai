@@ -20,17 +20,44 @@ function AuthForm() {
     try {
       if (isLogin) {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
+        if (error) {
+          console.error("LOGIN ERROR:", error)
+          alert("Error: " + error.message)
+          setError(error.message)
+          setLoading(false)
+          return
+        }
+        console.log("SUCCESS:", data)
         if (data.session) window.location.href = redirect
       } else {
-        const { error } = await supabase.auth.signUp({ email, password })
-        if (error) throw error
+        const { data: signUpData, error } = await supabase.auth.signUp({ email, password })
+        if (error) {
+          console.error("SIGNUP ERROR:", error)
+          alert("Signup Error: " + error.message)
+          setError(error.message)
+          setLoading(false)
+          return
+        }
+        console.log("SIGNUP SUCCESS:", signUpData)
+        if (signUpData.user && !signUpData.session) {
+          setError('Account created! Please check your email to confirm your account before signing in.')
+          setLoading(false)
+          return
+        }
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-        if (signInError) throw signInError
+        if (signInError) {
+          console.error("AUTO-SIGNIN ERROR:", signInError)
+          alert("Auto-signin Error: " + signInError.message)
+          setError(signInError.message)
+          setLoading(false)
+          return
+        }
         if (signInData.session) window.location.href = redirect
       }
     } catch (err: any) {
-      setError(err.message)
+      console.error("CATCH ERROR:", err)
+      alert("Catch Error: " + err.message)
+      setError(err.message || 'An unexpected error occurred')
     } finally {
       setLoading(false)
     }
